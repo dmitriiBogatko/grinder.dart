@@ -6,20 +6,56 @@ library grinder.bin.grinder;
 
 import 'dart:io';
 
-void main(List<String> args) {
-  final script = 'tool/grind.dart';
-  final file = File(script);
+import 'package:path/path.dart';
 
-  if (!file.existsSync()) {
-    stderr.writeln(
-        "Error: expected to find '${script}' relative to the current directory.");
+const script = 'tool/grind.dart';
+const snapshotPath = '.dart_tool/grinder';
+const scriptSnapshot = '$snapshotPath/grind.dart.snapshot';
+const scriptSnapshotSum = '$snapshotPath/grind.dart.snapshot.sum';
+
+void main(List<String> args) {
+  final fileScript = File(script);
+
+  if (!fileScript.existsSync()) {
+    stderr.writeln("Error: expected to find '${script}' relative to the current directory.");
     exit(1);
   }
 
-  final newArgs = <String>[script, ...args];
+  if (!File(scriptSnapshot).existsSync() || !_isValidSumFile()) {
+    Directory(snapshotPath).createSync(recursive: true);
+
+    final result = Process.runSync(
+      'dart',
+      [
+        '--snapshot-kind=kernel',
+        '--snapshot=$scriptSnapshot',
+        script,
+      ],
+    );
+
+    if (result.exitCode == 0) {
+      File(scriptSnapshotSum).writeAsStringSync(_getSum());
+    }
+  }
+
+  final newArgs = <String>[scriptSnapshot, ...args];
   Process.start(Platform.resolvedExecutable, newArgs).then((Process process) {
     stdout.addStream(process.stdout);
     stderr.addStream(process.stderr);
+
     return process.exitCode.then((int code) => exit(code));
   });
+}
+
+bool _isValidSumFile() {
+  final sumFile = File(scriptSnapshotSum);
+  if (!sumFile.existsSync()) {
+    return false;
+  }
+
+  return sumFile.readAsStringSync() == _getSum();
+}
+
+String _getSum() {
+  return hash('pubspec.lock').toString() + hash(script).toString();
 }

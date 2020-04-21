@@ -1,5 +1,8 @@
 # grinder.dart changes
 
+## 0.8.4+1
+- Support snapshot logic for tool/grind.dart
+
 ## 0.8.4
 - Update the code to be `package:pedantic` v1.9.0 compliant
 
