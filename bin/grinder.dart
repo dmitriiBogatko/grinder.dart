@@ -35,7 +35,10 @@ void main(List<String> args) {
 
     if (result.exitCode == 0) {
       File(scriptSnapshotSum).writeAsStringSync(_getSum());
+      print('snapshot created: $scriptSnapshot');
     }
+  } else {
+    print('snapshot found');
   }
 
   final newArgs = <String>[scriptSnapshot, ...args];
