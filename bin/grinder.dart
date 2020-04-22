@@ -6,12 +6,12 @@ library grinder.bin.grinder;
 
 import 'dart:io';
 
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 
 const script = 'tool/grind.dart';
-const snapshotPath = '.dart_tool/grinder';
-const scriptSnapshot = '$snapshotPath/grind.dart.snapshot';
-const scriptSnapshotSum = '$snapshotPath/grind.dart.snapshot.sum';
+final snapshotPath = '$_defaultDir/snapshots/grinder';
+final scriptSnapshot = '$snapshotPath/grind.dart.snapshot';
+final scriptSnapshotSum = '$snapshotPath/grind.dart.snapshot.sum';
 
 void main(List<String> args) {
   final fileScript = File(script);
@@ -25,7 +25,7 @@ void main(List<String> args) {
     Directory(snapshotPath).createSync(recursive: true);
 
     final result = Process.runSync(
-      'dart',
+      Platform.resolvedExecutable,
       [
         '--snapshot-kind=kernel',
         '--snapshot=$scriptSnapshot',
@@ -47,6 +47,15 @@ void main(List<String> args) {
   });
 }
 
+final String _defaultDir = (() {
+  if (Platform.environment.containsKey('PUB_CACHE')) {
+    return Platform.environment['PUB_CACHE'];
+  } else if (Platform.isWindows) {
+    return p.join(Platform.environment['APPDATA'], 'Pub', 'Cache');
+  }
+  return '${Platform.environment['HOME']}/.pub-cache';
+})();
+
 bool _isValidSumFile() {
   final sumFile = File(scriptSnapshotSum);
   if (!sumFile.existsSync()) {
@@ -57,5 +66,5 @@ bool _isValidSumFile() {
 }
 
 String _getSum() {
-  return hash('pubspec.lock').toString() + hash(script).toString();
+  return p.hash('pubspec.lock').toString() + p.hash(script).toString();
 }
