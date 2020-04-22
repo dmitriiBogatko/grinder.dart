@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 const script = 'tool/grind.dart';
-final snapshotPath = '$_defaultDir/snapshots/grinder';
+final snapshotPath = p.join(_defaultDir, 'snapshots', 'grinder');
 final scriptSnapshot = '$snapshotPath/grind.dart.snapshot';
 final scriptSnapshotSum = '$snapshotPath/grind.dart.snapshot.sum';
 
